@@ -4,7 +4,7 @@
 <meta charset="UTF-8"/>
 <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
 <title>Congratulazioni Federico!</title>
-<link href="https://fonts.googleapis.com/css2?family=Playfair+Display:ital,wght@0,400;0,700;1,400&family=DM+Sans:wght@300;400;500&display=swap" rel="stylesheet"/>
+<link href="https://fonts.googleapis.com/css2?family=Playfair+Display:ital,wght@0,400;0,700;1,400&family=DM+Sans:wght@300;400;500&family=주아+체:wght@400&family=Ms+Madi&display=swap" rel="stylesheet"/>
 <style>
   *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
 
@@ -20,9 +20,16 @@
 
   html, body {
     height: 100%;
-    background: var(--ink);
+    background: #FFFFFF;
     font-family: 'DM Sans', sans-serif;
     overflow: hidden;
+  }
+
+  #bg-canvas {
+    position: fixed;
+    inset: 0;
+    z-index: 0;
+    pointer-events: none;
   }
 
   /* ---- ENVELOPE SCENE ---- */
@@ -182,7 +189,7 @@
   #card-page {
     position: fixed;
     inset: 0;
-    background: var(--ink);
+    background: transparent;
     display: flex;
     align-items: center;
     justify-content: center;
@@ -328,14 +335,49 @@
   }
 
   .sign-area {
-    margin-top: 8px;
+    margin-top: 20px;
+    text-align: center;
+  }
+  .sign-label {
     font-size: 13px;
     color: #8b84c0;
-    text-align: center;
     font-style: italic;
+    margin-bottom: 12px;
+  }
+  .sign-names {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 8px;
+    justify-content: center;
+  }
+  .sign-name {
+    font-family: 'Ms Madi', cursive;
+    font-style: normal;
+    font-size: 20px;
+    color: var(--purple-deep);
+    background: white;
+    border: 1px solid var(--purple-light);
+    border-radius: 20px;
+    padding: 2px 14px;
+    opacity: 0;
+    transform: translateY(6px);
+    animation: rise 0.4s ease forwards;
   }
 
-  /* entrance animations */
+  .wkey {
+    cursor: pointer;
+    transition: background 0.08s;
+  }
+  .wkey:active, .wkey.pressed {
+    background: #d8d0f0;
+  }
+  .bkey {
+    cursor: pointer;
+    transition: background 0.08s;
+  }
+  .bkey:active, .bkey.pressed {
+    background: #534AB7;
+  }
   .card > * {
     opacity: 0;
     transform: translateY(16px);
@@ -374,6 +416,7 @@
 </style>
 </head>
 <body>
+<canvas id="bg-canvas"></canvas>
 
 <!-- ENVELOPE SCENE -->
 <div id="scene">
@@ -433,38 +476,94 @@
       </div>
     </div>
 
-    <div class="piano-bar" id="piano">
-      <!-- JS builds the keys -->
-    </div>
+    <div class="piano-bar" id="piano"></div>
 
-    <div class="sign-area">con affetto, ✍️</div>
+    <div class="sign-area">
+      <div class="sign-label">con affetto ✍️</div>
+      <div class="sign-names" id="sign-names"></div>
+    </div>
   </div>
 </div>
 
 <script>
-  // Build piano keys
+  // ---- PIANO INTERATTIVO ----
   const pianoEl = document.getElementById('piano');
-  const pattern = [0,1,0,1,0,0,1,0,1,0,1,0]; // 0=white,1=black
-  const whites = [0,2,4,5,7,9,11]; // white key semitones in octave
-  let whiteKeys = [];
-  for (let i = 0; i < 14; i++) {
+
+  const whiteFreqs = [
+    261.63, 293.66, 329.63, 349.23, 392.00, 440.00, 493.88,
+    523.25, 587.33, 659.25, 698.46, 783.99, 880.00, 987.77
+  ];
+  const blackKeys = [
+    {pos:0, freq:277.18}, {pos:1, freq:311.13}, {pos:3, freq:369.99},
+    {pos:4, freq:415.30}, {pos:5, freq:466.16},
+    {pos:7, freq:554.37}, {pos:8, freq:622.25}, {pos:10, freq:739.99},
+    {pos:11, freq:830.61}, {pos:12, freq:932.33}
+  ];
+
+  let isPointerDown = false;
+  let lastKeyEl = null;
+
+  function triggerKey(freq, el) {
+    if (!audioCtx) initAudio();
+    playNote(freq, audioCtx.currentTime, 0.5, 0.22);
+    el.classList.add('pressed');
+    setTimeout(() => el.classList.remove('pressed'), 180);
+  }
+
+  function handleKeyEnter(freq, el) {
+    if (!isPointerDown) return;
+    if (el === lastKeyEl) return;
+    lastKeyEl = el;
+    triggerKey(freq, el);
+  }
+
+  let whiteEls = [];
+  whiteFreqs.forEach((freq, i) => {
     const w = document.createElement('div');
     w.className = 'wkey';
+    w.addEventListener('pointerdown', e => {
+      isPointerDown = true; lastKeyEl = w;
+      triggerKey(freq, w);
+    });
+    w.addEventListener('pointerenter', () => handleKeyEnter(freq, w));
     pianoEl.appendChild(w);
-    whiteKeys.push(w);
-  }
-  // Place black keys
-  const blackPositions = [0,1,3,4,5, 7,8,10,11,12]; // indices of white keys that have a black key to the right
-  blackPositions.forEach(idx => {
-    if (idx < whiteKeys.length - 1) {
-      const b = document.createElement('div');
-      b.className = 'bkey';
-      const wRect = whiteKeys[idx];
-      // position relative to piano bar
-      b.style.left = (idx * 25 + 15) + 'px';
-      pianoEl.style.position = 'relative';
-      pianoEl.appendChild(b);
-    }
+    whiteEls.push(w);
+  });
+
+  blackKeys.forEach(({pos, freq}) => {
+    const b = document.createElement('div');
+    b.className = 'bkey';
+    b.style.left = (pos * 25 + 15) + 'px';
+    b.addEventListener('pointerdown', e => {
+      e.stopPropagation();
+      isPointerDown = true; lastKeyEl = b;
+      triggerKey(freq, b);
+    });
+    b.addEventListener('pointerenter', () => handleKeyEnter(freq, b));
+    pianoEl.appendChild(b);
+  });
+
+  // Rilascio globale
+  window.addEventListener('pointerup', () => { isPointerDown = false; lastKeyEl = null; });
+  window.addEventListener('pointercancel', () => { isPointerDown = false; lastKeyEl = null; });
+
+  // Disabilita scroll su touch mentre si suona
+  pianoEl.addEventListener('touchstart', e => e.preventDefault(), { passive: false });
+  pianoEl.addEventListener('touchmove', e => e.preventDefault(), { passive: false });
+
+  // ---- FIRME ----
+  const firme = [
+    'Alessandro', 'Annamarika', 'Colombara', 'Gaia', 'Federico G.',
+    'Davide', 'Tommaso', 'Alberto', 'Nico', 'Valentina',
+    'Massimo', 'Christian', 'Dani', 'Francesco', 'Gio'
+  ];
+  const namesEl = document.getElementById('sign-names');
+  firme.forEach((nome, i) => {
+    const span = document.createElement('span');
+    span.className = 'sign-name';
+    span.textContent = nome;
+    span.style.animationDelay = (0.8 + i * 0.06) + 's';
+    namesEl.appendChild(span);
   });
 
   // ---- AUDIO ----
@@ -478,61 +577,44 @@
   function playNote(freq, startTime, duration, volume = 0.18) {
     const osc = audioCtx.createOscillator();
     const gain = audioCtx.createGain();
-    // Slightly detuned sine for a warmer piano-like tone
     const osc2 = audioCtx.createOscillator();
     const gain2 = audioCtx.createGain();
-
     osc.type = 'triangle';
     osc.frequency.value = freq;
     osc2.type = 'sine';
-    osc2.frequency.value = freq * 2.001; // subtle octave shimmer
-
+    osc2.frequency.value = freq * 2.001;
     gain.gain.setValueAtTime(0, startTime);
     gain.gain.linearRampToValueAtTime(volume, startTime + 0.02);
     gain.gain.exponentialRampToValueAtTime(0.001, startTime + duration);
-
     gain2.gain.setValueAtTime(0, startTime);
     gain2.gain.linearRampToValueAtTime(volume * 0.15, startTime + 0.02);
     gain2.gain.exponentialRampToValueAtTime(0.001, startTime + duration * 0.6);
-
-    osc.connect(gain);
-    gain.connect(audioCtx.destination);
-    osc2.connect(gain2);
-    gain2.connect(audioCtx.destination);
-
-    osc.start(startTime);
-    osc.stop(startTime + duration);
-    osc2.start(startTime);
-    osc2.stop(startTime + duration * 0.6);
+    osc.connect(gain); gain.connect(audioCtx.destination);
+    osc2.connect(gain2); gain2.connect(audioCtx.destination);
+    osc.start(startTime); osc.stop(startTime + duration);
+    osc2.start(startTime); osc2.stop(startTime + duration * 0.6);
   }
 
   function playMelody() {
     if (!audioCtx) return;
     const now = audioCtx.currentTime + 0.05;
-
-    // Una piccola melodia allegra in Do maggiore
-    // note: [frequenza, delay, durata]
     const notes = [
-      // arpeggio introduttivo
-      [261.63, 0.0,  0.5],  // C4
-      [329.63, 0.15, 0.5],  // E4
-      [392.00, 0.30, 0.5],  // G4
-      [523.25, 0.45, 0.7],  // C5
-      // melodia
-      [523.25, 0.9,  0.35], // C5
-      [493.88, 1.2,  0.25], // B4
-      [440.00, 1.45, 0.35], // A4
-      [392.00, 1.75, 0.5],  // G4
-      [440.00, 2.2,  0.3],  // A4
-      [493.88, 2.5,  0.3],  // B4
-      [523.25, 2.8,  0.6],  // C5
-      // accordo finale
-      [261.63, 3.4,  1.2],  // C4
-      [329.63, 3.4,  1.2],  // E4
-      [392.00, 3.4,  1.2],  // G4
-      [523.25, 3.4,  1.2],  // C5
+      [261.63, 0.0,  0.5],
+      [329.63, 0.15, 0.5],
+      [392.00, 0.30, 0.5],
+      [523.25, 0.45, 0.7],
+      [523.25, 0.9,  0.35],
+      [493.88, 1.2,  0.25],
+      [440.00, 1.45, 0.35],
+      [392.00, 1.75, 0.5],
+      [440.00, 2.2,  0.3],
+      [493.88, 2.5,  0.3],
+      [523.25, 2.8,  0.6],
+      [261.63, 3.4,  1.2],
+      [329.63, 3.4,  1.2],
+      [392.00, 3.4,  1.2],
+      [523.25, 3.4,  1.2],
     ];
-
     notes.forEach(([freq, delay, dur]) => {
       playNote(freq, now + delay, dur);
     });
@@ -576,6 +658,110 @@
       }, i * 30);
     }
   }
+
+  // ---- ANIMATED BACKGROUND ----
+  const canvas = document.getElementById('bg-canvas');
+  const ctx = canvas.getContext('2d');
+
+  function resize() {
+    canvas.width = window.innerWidth;
+    canvas.height = window.innerHeight;
+  }
+  resize();
+  window.addEventListener('resize', resize);
+
+  // Floating particles
+  const PARTICLE_COUNT = 55;
+  const particles = Array.from({ length: PARTICLE_COUNT }, () => ({
+    x: Math.random() * window.innerWidth,
+    y: Math.random() * window.innerHeight,
+    r: 1 + Math.random() * 2.5,
+    speedX: (Math.random() - 0.5) * 0.3,
+    speedY: -0.1 - Math.random() * 0.3,
+    opacity: 0.04 + Math.random() * 0.18,
+    pulse: Math.random() * Math.PI * 2,
+    pulseSpeed: 0.005 + Math.random() * 0.015,
+  }));
+
+  // Wave lines (like staff lines, very subtle)
+  const WAVE_COUNT = 6;
+  const waves = Array.from({ length: WAVE_COUNT }, (_, i) => ({
+    y: (window.innerHeight / (WAVE_COUNT + 1)) * (i + 1),
+    amplitude: 8 + Math.random() * 18,
+    frequency: 0.003 + Math.random() * 0.004,
+    speed: 0.003 + Math.random() * 0.004,
+    phase: Math.random() * Math.PI * 2,
+    opacity: 0.04 + Math.random() * 0.06,
+  }));
+
+  // Nebula blobs (slow drifting color clouds)
+  const blobs = [
+    { x: 0.15, y: 0.25, r: 0.28, color: '83,74,183', speed: 0.00007, angle: 0.4 },
+    { x: 0.80, y: 0.70, r: 0.22, color: '60,52,137', speed: 0.00009, angle: 2.1 },
+    { x: 0.50, y: 0.10, r: 0.18, color: '175,169,236', speed: 0.00006, angle: 5.0 },
+    { x: 0.30, y: 0.85, r: 0.20, color: '83,74,183', speed: 0.00008, angle: 3.3 },
+  ];
+
+  let t = 0;
+
+  function drawFrame() {
+    const W = canvas.width;
+    const H = canvas.height;
+    ctx.clearRect(0, 0, W, H);
+
+    // base bg
+    ctx.fillStyle = '#FFFFFF';
+    ctx.fillRect(0, 0, W, H);
+
+    // nebula blobs
+    blobs.forEach(b => {
+      b.angle += b.speed * 60;
+      const bx = (b.x + Math.cos(b.angle) * 0.06) * W;
+      const by = (b.y + Math.sin(b.angle) * 0.06) * H;
+      const br = b.r * Math.min(W, H);
+      const grad = ctx.createRadialGradient(bx, by, 0, bx, by, br);
+      grad.addColorStop(0, `rgba(${b.color},0.10)`);
+      grad.addColorStop(1, `rgba(${b.color},0)`);
+      ctx.beginPath();
+      ctx.arc(bx, by, br, 0, Math.PI * 2);
+      ctx.fillStyle = grad;
+      ctx.fill();
+    });
+
+    // wave lines (music staff mood)
+    waves.forEach(w => {
+      w.phase += w.speed;
+      ctx.beginPath();
+      for (let x = 0; x <= W; x += 3) {
+        const y = w.y + Math.sin(x * w.frequency + w.phase) * w.amplitude;
+        x === 0 ? ctx.moveTo(x, y) : ctx.lineTo(x, y);
+      }
+      ctx.strokeStyle = `rgba(83,74,183,${w.opacity})`;
+      ctx.lineWidth = 0.8;
+      ctx.stroke();
+    });
+
+    // floating particles
+    particles.forEach(p => {
+      p.x += p.speedX;
+      p.y += p.speedY;
+      p.pulse += p.pulseSpeed;
+      if (p.y < -10) { p.y = canvas.height + 10; p.x = Math.random() * canvas.width; }
+      if (p.x < -10) p.x = canvas.width + 10;
+      if (p.x > canvas.width + 10) p.x = -10;
+
+      const alpha = p.opacity * (0.7 + 0.3 * Math.sin(p.pulse));
+      ctx.beginPath();
+      ctx.arc(p.x, p.y, p.r, 0, Math.PI * 2);
+      ctx.fillStyle = `rgba(83,74,183,${alpha})`;
+      ctx.fill();
+    });
+
+    t++;
+    requestAnimationFrame(drawFrame);
+  }
+
+  drawFrame();
 </script>
 </body>
 </html>
