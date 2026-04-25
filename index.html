@@ -1,0 +1,581 @@
+<!DOCTYPE html>
+<html lang="it">
+<head>
+<meta charset="UTF-8"/>
+<meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+<title>Congratulazioni Federico!</title>
+<link href="https://fonts.googleapis.com/css2?family=Playfair+Display:ital,wght@0,400;0,700;1,400&family=DM+Sans:wght@300;400;500&display=swap" rel="stylesheet"/>
+<style>
+  *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+  :root {
+    --cream: #F7F3EC;
+    --ink: #1a1410;
+    --purple-deep: #3C3489;
+    --purple-mid: #534AB7;
+    --purple-light: #AFA9EC;
+    --purple-pale: #EEEDFE;
+    --gold: #C9A84C;
+  }
+
+  html, body {
+    height: 100%;
+    background: var(--ink);
+    font-family: 'DM Sans', sans-serif;
+    overflow: hidden;
+  }
+
+  /* ---- ENVELOPE SCENE ---- */
+  #scene {
+    position: fixed;
+    inset: 0;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    cursor: pointer;
+    z-index: 10;
+  }
+
+  #envelope-wrap {
+    position: relative;
+    width: 320px;
+    height: 220px;
+    transform-style: preserve-3d;
+    perspective: 800px;
+  }
+
+  /* envelope body */
+  #env-body {
+    position: absolute;
+    inset: 0;
+    background: var(--cream);
+    border-radius: 4px;
+    border: 1.5px solid #d4c9b4;
+    overflow: hidden;
+  }
+
+  /* bottom triangle fold */
+  #env-body::after {
+    content: '';
+    position: absolute;
+    bottom: 0; left: 0; right: 0;
+    height: 50%;
+    background: #EDE8DF;
+    clip-path: polygon(0% 100%, 50% 0%, 100% 100%);
+  }
+
+  /* side folds */
+  #env-left {
+    position: absolute;
+    top: 0; left: 0;
+    width: 50%; height: 100%;
+    background: #EBE5DA;
+    clip-path: polygon(0 0, 100% 50%, 0 100%);
+  }
+  #env-right {
+    position: absolute;
+    top: 0; right: 0;
+    width: 50%; height: 100%;
+    background: #E5DFCF;
+    clip-path: polygon(100% 0, 0 50%, 100% 100%);
+  }
+
+  /* flap (top fold) - animates open */
+  #env-flap {
+    position: absolute;
+    top: 0; left: 0; right: 0;
+    height: 50%;
+    transform-origin: top center;
+    transform-style: preserve-3d;
+    z-index: 5;
+    transition: transform 0.7s cubic-bezier(.4,0,.2,1);
+  }
+  #env-flap-inner {
+    width: 100%;
+    height: 100%;
+    background: var(--cream);
+    clip-path: polygon(0 0, 50% 100%, 100% 0);
+    border: none;
+    backface-visibility: hidden;
+  }
+  #env-flap-back {
+    position: absolute;
+    inset: 0;
+    background: #EDE8DF;
+    clip-path: polygon(0 0, 50% 100%, 100% 0);
+    transform: rotateX(180deg);
+    backface-visibility: hidden;
+  }
+
+  /* wax seal */
+  #seal {
+    position: absolute;
+    top: 50%;
+    left: 50%;
+    transform: translate(-50%, -50%);
+    width: 52px;
+    height: 52px;
+    background: var(--purple-deep);
+    border-radius: 50%;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 22px;
+    box-shadow: 0 2px 12px rgba(60,52,137,0.35);
+    z-index: 6;
+    transition: opacity 0.3s ease, transform 0.3s ease;
+  }
+
+  /* tap hint */
+  #hint {
+    position: absolute;
+    bottom: -44px;
+    left: 50%;
+    transform: translateX(-50%);
+    color: #888;
+    font-size: 13px;
+    letter-spacing: 0.05em;
+    white-space: nowrap;
+    animation: pulse 2s ease-in-out infinite;
+  }
+
+  @keyframes pulse {
+    0%, 100% { opacity: 0.4; }
+    50% { opacity: 1; }
+  }
+
+  /* card sliding out */
+  #card-peek {
+    position: absolute;
+    left: 12px; right: 12px;
+    bottom: 12px;
+    height: calc(100% - 24px);
+    background: var(--purple-pale);
+    border-radius: 4px;
+    z-index: 3;
+    transform: translateY(0);
+    transition: transform 0.8s cubic-bezier(.22,1,.36,1) 0.4s;
+  }
+
+  /* states */
+  #scene.opening #env-flap {
+    transform: rotateX(-160deg);
+  }
+  #scene.opening #seal {
+    opacity: 0;
+    transform: translate(-50%, -50%) scale(0.6);
+  }
+  #scene.opening #card-peek {
+    transform: translateY(-80px);
+  }
+  #scene.done {
+    pointer-events: none;
+    animation: fadeOut 0.5s ease forwards;
+    animation-delay: 0.2s;
+  }
+
+  @keyframes fadeOut {
+    to { opacity: 0; visibility: hidden; }
+  }
+
+  /* ---- CARD PAGE ---- */
+  #card-page {
+    position: fixed;
+    inset: 0;
+    background: var(--ink);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    opacity: 0;
+    pointer-events: none;
+    transition: opacity 0.6s ease;
+    padding: 24px;
+  }
+  #card-page.visible {
+    opacity: 1;
+    pointer-events: all;
+  }
+
+  .card {
+    background: var(--purple-pale);
+    border-radius: 20px;
+    border: 1px solid var(--purple-light);
+    max-width: 420px;
+    width: 100%;
+    padding: 40px 36px 36px;
+    position: relative;
+    overflow: hidden;
+  }
+
+  /* music staff decoration */
+  .staff {
+    position: absolute;
+    top: 0; left: 0; right: 0;
+    height: 80px;
+    overflow: hidden;
+    opacity: 0.12;
+  }
+  .staff line {
+    stroke: var(--purple-deep);
+    stroke-width: 1;
+  }
+  .note {
+    position: absolute;
+    width: 10px;
+    height: 10px;
+    background: var(--purple-mid);
+    border-radius: 50%;
+    opacity: 0.25;
+  }
+
+  /* piano keys bottom */
+  .piano-bar {
+    display: flex;
+    gap: 3px;
+    justify-content: center;
+    margin-top: 28px;
+    position: relative;
+    height: 54px;
+  }
+  .wkey {
+    width: 22px;
+    height: 54px;
+    background: white;
+    border-radius: 0 0 4px 4px;
+    border: 1px solid #d0c8e0;
+    position: relative;
+    flex-shrink: 0;
+  }
+  .bkey {
+    width: 14px;
+    height: 34px;
+    background: var(--purple-deep);
+    border-radius: 0 0 3px 3px;
+    position: absolute;
+    top: 0;
+    z-index: 2;
+  }
+
+  .badge {
+    display: inline-block;
+    background: var(--purple-deep);
+    color: var(--purple-pale);
+    font-size: 11px;
+    font-weight: 500;
+    padding: 4px 14px;
+    border-radius: 20px;
+    letter-spacing: 0.06em;
+    margin-bottom: 20px;
+  }
+
+  h1 {
+    font-family: 'Playfair Display', serif;
+    font-size: clamp(28px, 6vw, 38px);
+    color: var(--purple-deep);
+    line-height: 1.15;
+    margin-bottom: 6px;
+  }
+  h1 em {
+    font-style: italic;
+    color: var(--purple-mid);
+  }
+
+  .sub {
+    font-size: 12px;
+    color: var(--purple-mid);
+    letter-spacing: 0.08em;
+    text-transform: uppercase;
+    margin-bottom: 24px;
+    font-weight: 400;
+  }
+
+  .divider {
+    height: 1px;
+    background: linear-gradient(to right, transparent, var(--purple-light), transparent);
+    margin: 0 0 24px;
+  }
+
+  .body-text {
+    font-size: 15px;
+    color: #3a3360;
+    line-height: 1.7;
+    margin-bottom: 20px;
+  }
+
+  .gift-box {
+    background: var(--purple-deep);
+    border-radius: 12px;
+    padding: 16px 20px;
+    display: flex;
+    align-items: center;
+    gap: 14px;
+    margin-bottom: 16px;
+  }
+  .gift-icon {
+    font-size: 28px;
+    flex-shrink: 0;
+  }
+  .gift-label {
+    color: var(--purple-pale);
+    font-size: 15px;
+    font-weight: 500;
+    line-height: 1.3;
+  }
+  .gift-sub {
+    color: var(--purple-light);
+    font-size: 12px;
+    margin-top: 2px;
+  }
+
+  .sign-area {
+    margin-top: 8px;
+    font-size: 13px;
+    color: #8b84c0;
+    text-align: center;
+    font-style: italic;
+  }
+
+  /* entrance animations */
+  .card > * {
+    opacity: 0;
+    transform: translateY(16px);
+  }
+  #card-page.visible .card > * {
+    animation: rise 0.5s ease forwards;
+  }
+  #card-page.visible .card > *:nth-child(1) { animation-delay: 0.1s; }
+  #card-page.visible .card > *:nth-child(2) { animation-delay: 0.2s; }
+  #card-page.visible .card > *:nth-child(3) { animation-delay: 0.3s; }
+  #card-page.visible .card > *:nth-child(4) { animation-delay: 0.38s; }
+  #card-page.visible .card > *:nth-child(5) { animation-delay: 0.44s; }
+  #card-page.visible .card > *:nth-child(6) { animation-delay: 0.5s; }
+  #card-page.visible .card > *:nth-child(7) { animation-delay: 0.56s; }
+  #card-page.visible .card > *:nth-child(8) { animation-delay: 0.62s; }
+  #card-page.visible .card > *:nth-child(9) { animation-delay: 0.68s; }
+
+  @keyframes rise {
+    to { opacity: 1; transform: translateY(0); }
+  }
+
+  /* confetti */
+  .confetti-piece {
+    position: fixed;
+    width: 8px;
+    height: 8px;
+    border-radius: 1px;
+    top: -20px;
+    animation: fall linear forwards;
+    pointer-events: none;
+    z-index: 100;
+  }
+  @keyframes fall {
+    to { transform: translateY(110vh) rotate(720deg); opacity: 0; }
+  }
+</style>
+</head>
+<body>
+
+<!-- ENVELOPE SCENE -->
+<div id="scene">
+  <div id="envelope-wrap">
+    <!-- card peeking out -->
+    <div id="card-peek"></div>
+
+    <!-- envelope body -->
+    <div id="env-body">
+      <div id="env-left"></div>
+      <div id="env-right"></div>
+    </div>
+
+    <!-- flap -->
+    <div id="env-flap">
+      <div id="env-flap-inner"></div>
+      <div id="env-flap-back"></div>
+    </div>
+
+    <!-- wax seal -->
+    <div id="seal">🎓</div>
+
+    <div id="hint">tocca per aprire</div>
+  </div>
+</div>
+
+<!-- CARD PAGE -->
+<div id="card-page">
+  <div class="card">
+    <!-- staff decoration SVG -->
+    <svg class="staff" viewBox="0 0 420 80" preserveAspectRatio="none">
+      <line x1="0" y1="20" x2="420" y2="20"/>
+      <line x1="0" y1="30" x2="420" y2="30"/>
+      <line x1="0" y1="40" x2="420" y2="40"/>
+      <line x1="0" y1="50" x2="420" y2="50"/>
+      <line x1="0" y1="60" x2="420" y2="60"/>
+    </svg>
+
+    <div class="badge">110 e lode · Bocconi</div>
+
+    <h1>Congratulazioni,<br><em>Federico!</em></h1>
+
+    <p class="sub">Intelligenza Artificiale · 2025</p>
+
+    <div class="divider"></div>
+
+    <p class="body-text">
+      Laureato col massimo dei voti, e adesso cosa manca?<br>
+      Un po' di musica, ovviamente.
+    </p>
+
+    <div class="gift-box">
+      <div class="gift-icon">🎹</div>
+      <div>
+        <div class="gift-label">Corso di pianoforte</div>
+        <div class="gift-sub">Livello intermedio · dettagli in arrivo</div>
+      </div>
+    </div>
+
+    <div class="piano-bar" id="piano">
+      <!-- JS builds the keys -->
+    </div>
+
+    <div class="sign-area">con affetto, ✍️</div>
+  </div>
+</div>
+
+<script>
+  // Build piano keys
+  const pianoEl = document.getElementById('piano');
+  const pattern = [0,1,0,1,0,0,1,0,1,0,1,0]; // 0=white,1=black
+  const whites = [0,2,4,5,7,9,11]; // white key semitones in octave
+  let whiteKeys = [];
+  for (let i = 0; i < 14; i++) {
+    const w = document.createElement('div');
+    w.className = 'wkey';
+    pianoEl.appendChild(w);
+    whiteKeys.push(w);
+  }
+  // Place black keys
+  const blackPositions = [0,1,3,4,5, 7,8,10,11,12]; // indices of white keys that have a black key to the right
+  blackPositions.forEach(idx => {
+    if (idx < whiteKeys.length - 1) {
+      const b = document.createElement('div');
+      b.className = 'bkey';
+      const wRect = whiteKeys[idx];
+      // position relative to piano bar
+      b.style.left = (idx * 25 + 15) + 'px';
+      pianoEl.style.position = 'relative';
+      pianoEl.appendChild(b);
+    }
+  });
+
+  // ---- AUDIO ----
+  let audioCtx = null;
+
+  function initAudio() {
+    if (audioCtx) return;
+    audioCtx = new (window.AudioContext || window.webkitAudioContext)();
+  }
+
+  function playNote(freq, startTime, duration, volume = 0.18) {
+    const osc = audioCtx.createOscillator();
+    const gain = audioCtx.createGain();
+    // Slightly detuned sine for a warmer piano-like tone
+    const osc2 = audioCtx.createOscillator();
+    const gain2 = audioCtx.createGain();
+
+    osc.type = 'triangle';
+    osc.frequency.value = freq;
+    osc2.type = 'sine';
+    osc2.frequency.value = freq * 2.001; // subtle octave shimmer
+
+    gain.gain.setValueAtTime(0, startTime);
+    gain.gain.linearRampToValueAtTime(volume, startTime + 0.02);
+    gain.gain.exponentialRampToValueAtTime(0.001, startTime + duration);
+
+    gain2.gain.setValueAtTime(0, startTime);
+    gain2.gain.linearRampToValueAtTime(volume * 0.15, startTime + 0.02);
+    gain2.gain.exponentialRampToValueAtTime(0.001, startTime + duration * 0.6);
+
+    osc.connect(gain);
+    gain.connect(audioCtx.destination);
+    osc2.connect(gain2);
+    gain2.connect(audioCtx.destination);
+
+    osc.start(startTime);
+    osc.stop(startTime + duration);
+    osc2.start(startTime);
+    osc2.stop(startTime + duration * 0.6);
+  }
+
+  function playMelody() {
+    if (!audioCtx) return;
+    const now = audioCtx.currentTime + 0.05;
+
+    // Una piccola melodia allegra in Do maggiore
+    // note: [frequenza, delay, durata]
+    const notes = [
+      // arpeggio introduttivo
+      [261.63, 0.0,  0.5],  // C4
+      [329.63, 0.15, 0.5],  // E4
+      [392.00, 0.30, 0.5],  // G4
+      [523.25, 0.45, 0.7],  // C5
+      // melodia
+      [523.25, 0.9,  0.35], // C5
+      [493.88, 1.2,  0.25], // B4
+      [440.00, 1.45, 0.35], // A4
+      [392.00, 1.75, 0.5],  // G4
+      [440.00, 2.2,  0.3],  // A4
+      [493.88, 2.5,  0.3],  // B4
+      [523.25, 2.8,  0.6],  // C5
+      // accordo finale
+      [261.63, 3.4,  1.2],  // C4
+      [329.63, 3.4,  1.2],  // E4
+      [392.00, 3.4,  1.2],  // G4
+      [523.25, 3.4,  1.2],  // C5
+    ];
+
+    notes.forEach(([freq, delay, dur]) => {
+      playNote(freq, now + delay, dur);
+    });
+  }
+
+  // Envelope interaction
+  const scene = document.getElementById('scene');
+  const cardPage = document.getElementById('card-page');
+  let clicked = false;
+
+  scene.addEventListener('click', () => {
+    if (clicked) return;
+    clicked = true;
+
+    initAudio();
+    playMelody();
+
+    scene.classList.add('opening');
+
+    setTimeout(() => {
+      scene.classList.add('done');
+      cardPage.classList.add('visible');
+      spawnConfetti();
+    }, 1200);
+  });
+
+  function spawnConfetti() {
+    const colors = ['#534AB7','#AFA9EC','#C9A84C','#EEEDFE','#3C3489','#F7F3EC'];
+    for (let i = 0; i < 60; i++) {
+      setTimeout(() => {
+        const el = document.createElement('div');
+        el.className = 'confetti-piece';
+        el.style.left = Math.random() * 100 + 'vw';
+        el.style.background = colors[Math.floor(Math.random() * colors.length)];
+        el.style.width = (6 + Math.random() * 6) + 'px';
+        el.style.height = (6 + Math.random() * 6) + 'px';
+        el.style.animationDuration = (1.5 + Math.random() * 2) + 's';
+        el.style.animationDelay = '0s';
+        document.body.appendChild(el);
+        setTimeout(() => el.remove(), 3500);
+      }, i * 30);
+    }
+  }
+</script>
+</body>
+</html>
