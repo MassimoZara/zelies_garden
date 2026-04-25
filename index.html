@@ -4,26 +4,23 @@
 <meta charset="UTF-8"/>
 <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
 <title>Congratulazioni Federico!</title>
-<link href="https://fonts.googleapis.com/css2?family=Playfair+Display:ital,wght@0,400;0,700;1,400&family=DM+Sans:wght@300;400;500&family=주아+체:wght@400&family=Ms+Madi&display=swap" rel="stylesheet"/>
+<link href="https://fonts.googleapis.com/css2?family=Playfair+Display:ital,wght@0,400;0,700;1,400&family=DM+Sans:wght@300;400;500&family=Ms+Madi&display=swap" rel="stylesheet"/>
 <style>
   *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
 
   :root {
     --cream: #F7F3EC;
-    --ink: #1a1410;
     --purple-deep: #3C3489;
     --purple-mid: #534AB7;
     --purple-light: #AFA9EC;
     --purple-pale: #EEEDFE;
-    --gold: #C9A84C;
   }
 
-  html, body {
-    height: 100%;
+  html {
     background: #FFFFFF;
     font-family: 'DM Sans', sans-serif;
-    overflow: hidden;
   }
+  body { min-height: 100vh; overflow-x: hidden; }
 
   #bg-canvas {
     position: fixed;
@@ -32,7 +29,7 @@
     pointer-events: none;
   }
 
-  /* ---- ENVELOPE SCENE ---- */
+  /* ---- ENVELOPE ---- */
   #scene {
     position: fixed;
     inset: 0;
@@ -42,258 +39,138 @@
     cursor: pointer;
     z-index: 10;
   }
-
   #envelope-wrap {
     position: relative;
-    width: 320px;
-    height: 220px;
+    width: min(320px, 85vw);
+    height: min(220px, 58vw);
     transform-style: preserve-3d;
     perspective: 800px;
   }
-
-  /* envelope body */
   #env-body {
-    position: absolute;
-    inset: 0;
+    position: absolute; inset: 0;
     background: var(--cream);
     border-radius: 4px;
     border: 1.5px solid #d4c9b4;
     overflow: hidden;
   }
-
-  /* bottom triangle fold */
   #env-body::after {
     content: '';
     position: absolute;
-    bottom: 0; left: 0; right: 0;
-    height: 50%;
+    bottom: 0; left: 0; right: 0; height: 50%;
     background: #EDE8DF;
     clip-path: polygon(0% 100%, 50% 0%, 100% 100%);
   }
-
-  /* side folds */
   #env-left {
-    position: absolute;
-    top: 0; left: 0;
-    width: 50%; height: 100%;
+    position: absolute; top: 0; left: 0; width: 50%; height: 100%;
     background: #EBE5DA;
     clip-path: polygon(0 0, 100% 50%, 0 100%);
   }
   #env-right {
-    position: absolute;
-    top: 0; right: 0;
-    width: 50%; height: 100%;
+    position: absolute; top: 0; right: 0; width: 50%; height: 100%;
     background: #E5DFCF;
     clip-path: polygon(100% 0, 0 50%, 100% 100%);
   }
-
-  /* flap (top fold) - animates open */
   #env-flap {
-    position: absolute;
-    top: 0; left: 0; right: 0;
-    height: 50%;
+    position: absolute; top: 0; left: 0; right: 0; height: 50%;
     transform-origin: top center;
     transform-style: preserve-3d;
     z-index: 5;
     transition: transform 0.7s cubic-bezier(.4,0,.2,1);
   }
   #env-flap-inner {
-    width: 100%;
-    height: 100%;
+    width: 100%; height: 100%;
     background: var(--cream);
     clip-path: polygon(0 0, 50% 100%, 100% 0);
-    border: none;
     backface-visibility: hidden;
   }
   #env-flap-back {
-    position: absolute;
-    inset: 0;
+    position: absolute; inset: 0;
     background: #EDE8DF;
     clip-path: polygon(0 0, 50% 100%, 100% 0);
     transform: rotateX(180deg);
     backface-visibility: hidden;
   }
-
-  /* wax seal */
   #seal {
-    position: absolute;
-    top: 50%;
-    left: 50%;
+    position: absolute; top: 50%; left: 50%;
     transform: translate(-50%, -50%);
-    width: 52px;
-    height: 52px;
+    width: 52px; height: 52px;
     background: var(--purple-deep);
     border-radius: 50%;
-    display: flex;
-    align-items: center;
-    justify-content: center;
+    display: flex; align-items: center; justify-content: center;
     font-size: 22px;
     box-shadow: 0 2px 12px rgba(60,52,137,0.35);
     z-index: 6;
     transition: opacity 0.3s ease, transform 0.3s ease;
   }
-
-  /* tap hint */
   #hint {
-    position: absolute;
-    bottom: -44px;
-    left: 50%;
+    position: absolute; bottom: -44px; left: 50%;
     transform: translateX(-50%);
-    color: #888;
-    font-size: 13px;
-    letter-spacing: 0.05em;
+    color: #888; font-size: 13px; letter-spacing: 0.05em;
     white-space: nowrap;
     animation: pulse 2s ease-in-out infinite;
   }
+  @keyframes pulse { 0%,100%{opacity:0.4} 50%{opacity:1} }
 
-  @keyframes pulse {
-    0%, 100% { opacity: 0.4; }
-    50% { opacity: 1; }
-  }
-
-  /* card sliding out */
   #card-peek {
-    position: absolute;
-    left: 12px; right: 12px;
-    bottom: 12px;
+    position: absolute; left: 12px; right: 12px; bottom: 12px;
     height: calc(100% - 24px);
     background: var(--purple-pale);
-    border-radius: 4px;
-    z-index: 3;
+    border-radius: 4px; z-index: 3;
     transform: translateY(0);
     transition: transform 0.8s cubic-bezier(.22,1,.36,1) 0.4s;
   }
+  #scene.opening #env-flap { transform: rotateX(-160deg); }
+  #scene.opening #seal { opacity: 0; transform: translate(-50%,-50%) scale(0.6); }
+  #scene.opening #card-peek { transform: translateY(-80px); }
+  #scene.done { pointer-events: none; animation: fadeOut 0.5s ease 0.2s forwards; }
+  @keyframes fadeOut { to { opacity:0; visibility:hidden; } }
 
-  /* states */
-  #scene.opening #env-flap {
-    transform: rotateX(-160deg);
-  }
-  #scene.opening #seal {
-    opacity: 0;
-    transform: translate(-50%, -50%) scale(0.6);
-  }
-  #scene.opening #card-peek {
-    transform: translateY(-80px);
-  }
-  #scene.done {
-    pointer-events: none;
-    animation: fadeOut 0.5s ease forwards;
-    animation-delay: 0.2s;
-  }
-
-  @keyframes fadeOut {
-    to { opacity: 0; visibility: hidden; }
-  }
-
-  /* ---- CARD PAGE ---- */
+  /* ---- CARD PAGE (scrollabile) ---- */
   #card-page {
-    position: fixed;
-    inset: 0;
-    background: transparent;
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    opacity: 0;
-    pointer-events: none;
+    position: relative; z-index: 1;
+    display: flex; justify-content: center;
+    padding: 32px 16px 60px;
+    min-height: 100vh;
+    align-items: flex-start;
+    opacity: 0; pointer-events: none;
     transition: opacity 0.6s ease;
-    padding: 24px;
   }
-  #card-page.visible {
-    opacity: 1;
-    pointer-events: all;
-  }
+  #card-page.visible { opacity: 1; pointer-events: all; }
 
   .card {
     background: var(--purple-pale);
     border-radius: 20px;
     border: 1px solid var(--purple-light);
-    max-width: 420px;
-    width: 100%;
-    padding: 40px 36px 36px;
-    position: relative;
-    overflow: hidden;
+    max-width: 420px; width: 100%;
+    padding: clamp(24px,6vw,40px) clamp(20px,6vw,36px) clamp(24px,6vw,36px);
+    position: relative; overflow: hidden;
   }
 
-  /* music staff decoration */
   .staff {
-    position: absolute;
-    top: 0; left: 0; right: 0;
-    height: 80px;
-    overflow: hidden;
-    opacity: 0.12;
+    position: absolute; top: 0; left: 0; right: 0; height: 80px;
+    overflow: hidden; opacity: 0.12;
   }
-  .staff line {
-    stroke: var(--purple-deep);
-    stroke-width: 1;
-  }
-  .note {
-    position: absolute;
-    width: 10px;
-    height: 10px;
-    background: var(--purple-mid);
-    border-radius: 50%;
-    opacity: 0.25;
-  }
-
-  /* piano keys bottom */
-  .piano-bar {
-    display: flex;
-    gap: 3px;
-    justify-content: center;
-    margin-top: 28px;
-    position: relative;
-    height: 54px;
-  }
-  .wkey {
-    width: 22px;
-    height: 54px;
-    background: white;
-    border-radius: 0 0 4px 4px;
-    border: 1px solid #d0c8e0;
-    position: relative;
-    flex-shrink: 0;
-  }
-  .bkey {
-    width: 14px;
-    height: 34px;
-    background: var(--purple-deep);
-    border-radius: 0 0 3px 3px;
-    position: absolute;
-    top: 0;
-    z-index: 2;
-  }
+  .staff line { stroke: var(--purple-deep); stroke-width: 1; }
 
   .badge {
     display: inline-block;
-    background: var(--purple-deep);
-    color: var(--purple-pale);
-    font-size: 11px;
-    font-weight: 500;
-    padding: 4px 14px;
-    border-radius: 20px;
-    letter-spacing: 0.06em;
-    margin-bottom: 20px;
+    background: var(--purple-deep); color: var(--purple-pale);
+    font-size: 11px; font-weight: 500;
+    padding: 4px 14px; border-radius: 20px;
+    letter-spacing: 0.06em; margin-bottom: 20px;
   }
 
   h1 {
     font-family: 'Playfair Display', serif;
-    font-size: clamp(28px, 6vw, 38px);
-    color: var(--purple-deep);
-    line-height: 1.15;
-    margin-bottom: 6px;
+    font-size: clamp(26px,7vw,38px);
+    color: var(--purple-deep); line-height: 1.15; margin-bottom: 6px;
   }
-  h1 em {
-    font-style: italic;
-    color: var(--purple-mid);
-  }
+  h1 em { font-style: italic; color: var(--purple-mid); }
 
   .sub {
-    font-size: 12px;
-    color: var(--purple-mid);
-    letter-spacing: 0.08em;
-    text-transform: uppercase;
-    margin-bottom: 24px;
-    font-weight: 400;
+    font-size: 12px; color: var(--purple-mid);
+    letter-spacing: 0.08em; text-transform: uppercase;
+    margin-bottom: 24px; font-weight: 400;
   }
 
   .divider {
@@ -303,150 +180,159 @@
   }
 
   .body-text {
-    font-size: 15px;
-    color: #3a3360;
-    line-height: 1.7;
-    margin-bottom: 20px;
+    font-size: 15px; color: #3a3360;
+    line-height: 1.7; margin-bottom: 20px;
   }
 
   .gift-box {
     background: var(--purple-deep);
-    border-radius: 12px;
-    padding: 16px 20px;
-    display: flex;
-    align-items: center;
-    gap: 14px;
-    margin-bottom: 16px;
+    border-radius: 12px; padding: 16px 20px;
+    display: flex; align-items: center; gap: 14px;
+    margin-bottom: 20px;
   }
-  .gift-icon {
-    font-size: 28px;
-    flex-shrink: 0;
-  }
-  .gift-label {
-    color: var(--purple-pale);
-    font-size: 15px;
-    font-weight: 500;
-    line-height: 1.3;
-  }
-  .gift-sub {
-    color: var(--purple-light);
-    font-size: 12px;
-    margin-top: 2px;
-  }
+  .gift-icon { font-size: 28px; flex-shrink: 0; }
+  .gift-label { color: var(--purple-pale); font-size: 15px; font-weight: 500; line-height: 1.3; }
+  .gift-sub { color: var(--purple-light); font-size: 12px; margin-top: 2px; }
 
+  /* Piano */
+  .piano-bar {
+    display: flex; gap: 3px; justify-content: center;
+    margin-bottom: 24px; position: relative; height: 54px;
+    overflow: hidden;
+  }
+  .wkey {
+    width: 22px; height: 54px;
+    background: white; border-radius: 0 0 4px 4px;
+    border: 1px solid #d0c8e0;
+    position: relative; flex-shrink: 0;
+    cursor: pointer; transition: background 0.08s;
+    touch-action: none;
+  }
+  .wkey.pressed { background: #d8d0f0; }
+  .bkey {
+    width: 14px; height: 34px;
+    background: var(--purple-deep);
+    border-radius: 0 0 3px 3px;
+    position: absolute; top: 0; z-index: 2;
+    cursor: pointer; transition: background 0.08s;
+    touch-action: none;
+  }
+  .bkey.pressed { background: #534AB7; }
+
+  /* ---- FIRME COLLASSABILI ---- */
   .sign-area {
-    margin-top: 20px;
-    text-align: center;
+    border-radius: 12px;
+    border: 1px solid var(--purple-light);
+    overflow: hidden;
+    background: white;
   }
-  .sign-label {
-    font-size: 13px;
-    color: #8b84c0;
-    font-style: italic;
-    margin-bottom: 12px;
+  .sign-toggle {
+    width: 100%; background: none; border: none;
+    cursor: pointer; padding: 14px 18px;
+    display: flex; align-items: center;
+    justify-content: space-between; gap: 8px;
+    font-family: 'DM Sans', sans-serif;
   }
+  .sign-toggle-left {
+    display: flex; align-items: center; gap: 10px;
+    overflow: hidden;
+  }
+  .sign-toggle-text {
+    font-size: 13px; color: var(--purple-mid);
+    font-style: italic; white-space: nowrap; flex-shrink: 0;
+  }
+  .sign-cursor {
+    display: inline-block; width: 1px; height: 13px;
+    background: var(--purple-mid);
+    animation: blink 1s step-end infinite;
+    vertical-align: middle; margin-left: 2px;
+  }
+  .sign-area.open .sign-cursor { display: none; }
+  @keyframes blink { 0%,100%{opacity:1} 50%{opacity:0} }
+
+  .sign-chevron {
+    font-size: 11px; color: var(--purple-light);
+    transition: transform 0.3s ease; flex-shrink: 0;
+  }
+  .sign-area.open .sign-chevron { transform: rotate(180deg); }
+
+  .sign-preview {
+    display: flex; gap: 4px;
+    overflow: hidden; flex-shrink: 1; min-width: 0;
+  }
+  .sign-preview-name {
+    font-family: 'Ms Madi', cursive;
+    font-size: 18px; color: var(--purple-deep);
+    opacity: 0.4; white-space: nowrap;
+  }
+  .sign-area.open .sign-preview { display: none; }
+
+  .sign-names-wrap {
+    max-height: 0; overflow: hidden;
+    transition: max-height 0.45s cubic-bezier(.22,1,.36,1);
+  }
+  .sign-area.open .sign-names-wrap { max-height: 400px; }
+
   .sign-names {
-    display: flex;
-    flex-wrap: wrap;
-    gap: 8px;
-    justify-content: center;
+    display: flex; flex-wrap: wrap; gap: 8px;
+    padding: 4px 16px 16px;
   }
   .sign-name {
     font-family: 'Ms Madi', cursive;
-    font-style: normal;
-    font-size: 20px;
-    color: var(--purple-deep);
-    background: white;
+    font-size: 20px; color: var(--purple-deep);
+    background: var(--purple-pale);
     border: 1px solid var(--purple-light);
-    border-radius: 20px;
-    padding: 2px 14px;
-    opacity: 0;
-    transform: translateY(6px);
-    animation: rise 0.4s ease forwards;
+    border-radius: 20px; padding: 2px 12px;
+    opacity: 0; transform: translateY(6px);
   }
+  .sign-area.open .sign-name { animation: rise 0.4s ease forwards; }
 
-  .wkey {
-    cursor: pointer;
-    transition: background 0.08s;
-  }
-  .wkey:active, .wkey.pressed {
-    background: #d8d0f0;
-  }
-  .bkey {
-    cursor: pointer;
-    transition: background 0.08s;
-  }
-  .bkey:active, .bkey.pressed {
-    background: #534AB7;
-  }
-  .card > * {
-    opacity: 0;
-    transform: translateY(16px);
-  }
-  #card-page.visible .card > * {
-    animation: rise 0.5s ease forwards;
-  }
-  #card-page.visible .card > *:nth-child(1) { animation-delay: 0.1s; }
-  #card-page.visible .card > *:nth-child(2) { animation-delay: 0.2s; }
-  #card-page.visible .card > *:nth-child(3) { animation-delay: 0.3s; }
-  #card-page.visible .card > *:nth-child(4) { animation-delay: 0.38s; }
-  #card-page.visible .card > *:nth-child(5) { animation-delay: 0.44s; }
-  #card-page.visible .card > *:nth-child(6) { animation-delay: 0.5s; }
-  #card-page.visible .card > *:nth-child(7) { animation-delay: 0.56s; }
-  #card-page.visible .card > *:nth-child(8) { animation-delay: 0.62s; }
-  #card-page.visible .card > *:nth-child(9) { animation-delay: 0.68s; }
+  /* entrance animations */
+  .card > * { opacity: 0; transform: translateY(16px); }
+  #card-page.visible .card > * { animation: rise 0.5s ease forwards; }
+  #card-page.visible .card > *:nth-child(1) { animation-delay: 0.10s; }
+  #card-page.visible .card > *:nth-child(2) { animation-delay: 0.18s; }
+  #card-page.visible .card > *:nth-child(3) { animation-delay: 0.26s; }
+  #card-page.visible .card > *:nth-child(4) { animation-delay: 0.34s; }
+  #card-page.visible .card > *:nth-child(5) { animation-delay: 0.40s; }
+  #card-page.visible .card > *:nth-child(6) { animation-delay: 0.46s; }
+  #card-page.visible .card > *:nth-child(7) { animation-delay: 0.52s; }
+  #card-page.visible .card > *:nth-child(8) { animation-delay: 0.58s; }
+  #card-page.visible .card > *:nth-child(9) { animation-delay: 0.64s; }
 
-  @keyframes rise {
-    to { opacity: 1; transform: translateY(0); }
-  }
+  @keyframes rise { to { opacity:1; transform:translateY(0); } }
 
-  /* confetti */
   .confetti-piece {
-    position: fixed;
-    width: 8px;
-    height: 8px;
-    border-radius: 1px;
-    top: -20px;
+    position: fixed; width: 8px; height: 8px;
+    border-radius: 1px; top: -20px;
     animation: fall linear forwards;
-    pointer-events: none;
-    z-index: 100;
+    pointer-events: none; z-index: 100;
   }
-  @keyframes fall {
-    to { transform: translateY(110vh) rotate(720deg); opacity: 0; }
-  }
+  @keyframes fall { to { transform: translateY(110vh) rotate(720deg); opacity:0; } }
 </style>
 </head>
 <body>
+
 <canvas id="bg-canvas"></canvas>
 
-<!-- ENVELOPE SCENE -->
 <div id="scene">
   <div id="envelope-wrap">
-    <!-- card peeking out -->
     <div id="card-peek"></div>
-
-    <!-- envelope body -->
     <div id="env-body">
       <div id="env-left"></div>
       <div id="env-right"></div>
     </div>
-
-    <!-- flap -->
     <div id="env-flap">
       <div id="env-flap-inner"></div>
       <div id="env-flap-back"></div>
     </div>
-
-    <!-- wax seal -->
     <div id="seal">🎓</div>
-
     <div id="hint">tocca per aprire</div>
   </div>
 </div>
 
-<!-- CARD PAGE -->
 <div id="card-page">
   <div class="card">
-    <!-- staff decoration SVG -->
     <svg class="staff" viewBox="0 0 420 80" preserveAspectRatio="none">
       <line x1="0" y1="20" x2="420" y2="20"/>
       <line x1="0" y1="30" x2="420" y2="30"/>
@@ -456,18 +342,13 @@
     </svg>
 
     <div class="badge">110 e lode · Bocconi</div>
-
     <h1>Congratulazioni,<br><em>Federico!</em></h1>
-
     <p class="sub">Intelligenza Artificiale · 2025</p>
-
     <div class="divider"></div>
-
     <p class="body-text">
       Laureato col massimo dei voti, e adesso cosa manca?<br>
       Un po' di musica, ovviamente.
     </p>
-
     <div class="gift-box">
       <div class="gift-icon">🎹</div>
       <div>
@@ -475,292 +356,261 @@
         <div class="gift-sub">Livello intermedio · dettagli in arrivo</div>
       </div>
     </div>
-
     <div class="piano-bar" id="piano"></div>
 
-    <div class="sign-area">
-      <div class="sign-label">con affetto ✍️</div>
-      <div class="sign-names" id="sign-names"></div>
+    <div class="sign-area" id="sign-area">
+      <button class="sign-toggle" id="sign-toggle" aria-expanded="false">
+        <div class="sign-toggle-left">
+          <span class="sign-toggle-text">con affetto ✍️<span class="sign-cursor"></span></span>
+          <div class="sign-preview" id="sign-preview"></div>
+        </div>
+        <span class="sign-chevron">▼</span>
+      </button>
+      <div class="sign-names-wrap">
+        <div class="sign-names" id="sign-names"></div>
+      </div>
     </div>
   </div>
 </div>
 
 <script>
-  // ---- PIANO INTERATTIVO ----
-  const pianoEl = document.getElementById('piano');
-
-  const whiteFreqs = [
-    261.63, 293.66, 329.63, 349.23, 392.00, 440.00, 493.88,
-    523.25, 587.33, 659.25, 698.46, 783.99, 880.00, 987.77
-  ];
-  const blackKeys = [
-    {pos:0, freq:277.18}, {pos:1, freq:311.13}, {pos:3, freq:369.99},
-    {pos:4, freq:415.30}, {pos:5, freq:466.16},
-    {pos:7, freq:554.37}, {pos:8, freq:622.25}, {pos:10, freq:739.99},
-    {pos:11, freq:830.61}, {pos:12, freq:932.33}
-  ];
-
-  let isPointerDown = false;
-  let lastKeyEl = null;
-
-  function triggerKey(freq, el) {
-    if (!audioCtx) initAudio();
-    playNote(freq, audioCtx.currentTime, 0.5, 0.22);
-    el.classList.add('pressed');
-    setTimeout(() => el.classList.remove('pressed'), 180);
-  }
-
-  function handleKeyEnter(freq, el) {
-    if (!isPointerDown) return;
-    if (el === lastKeyEl) return;
-    lastKeyEl = el;
-    triggerKey(freq, el);
-  }
-
-  let whiteEls = [];
-  whiteFreqs.forEach((freq, i) => {
-    const w = document.createElement('div');
-    w.className = 'wkey';
-    w.addEventListener('pointerdown', e => {
-      isPointerDown = true; lastKeyEl = w;
-      triggerKey(freq, w);
-    });
-    w.addEventListener('pointerenter', () => handleKeyEnter(freq, w));
-    pianoEl.appendChild(w);
-    whiteEls.push(w);
-  });
-
-  blackKeys.forEach(({pos, freq}) => {
-    const b = document.createElement('div');
-    b.className = 'bkey';
-    b.style.left = (pos * 25 + 15) + 'px';
-    b.addEventListener('pointerdown', e => {
-      e.stopPropagation();
-      isPointerDown = true; lastKeyEl = b;
-      triggerKey(freq, b);
-    });
-    b.addEventListener('pointerenter', () => handleKeyEnter(freq, b));
-    pianoEl.appendChild(b);
-  });
-
-  // Rilascio globale
-  window.addEventListener('pointerup', () => { isPointerDown = false; lastKeyEl = null; });
-  window.addEventListener('pointercancel', () => { isPointerDown = false; lastKeyEl = null; });
-
-  // Disabilita scroll su touch mentre si suona
-  pianoEl.addEventListener('touchstart', e => e.preventDefault(), { passive: false });
-  pianoEl.addEventListener('touchmove', e => e.preventDefault(), { passive: false });
-
-  // ---- FIRME ----
-  const firme = [
-    'Alessandro', 'Annamarika', 'Colombara', 'Gaia', 'Federico G.',
-    'Davide', 'Tommaso', 'Alberto', 'Nico', 'Valentina',
-    'Massimo', 'Christian', 'Dani', 'Francesco', 'Gio'
-  ];
-  const namesEl = document.getElementById('sign-names');
-  firme.forEach((nome, i) => {
-    const span = document.createElement('span');
-    span.className = 'sign-name';
-    span.textContent = nome;
-    span.style.animationDelay = (0.8 + i * 0.06) + 's';
-    namesEl.appendChild(span);
-  });
-
   // ---- AUDIO ----
   let audioCtx = null;
-
   function initAudio() {
     if (audioCtx) return;
     audioCtx = new (window.AudioContext || window.webkitAudioContext)();
   }
 
-  function playNote(freq, startTime, duration, volume = 0.18) {
+  function playPianoNote(freq, startTime, duration, volume=0.18) {
     const osc = audioCtx.createOscillator();
     const gain = audioCtx.createGain();
     const osc2 = audioCtx.createOscillator();
     const gain2 = audioCtx.createGain();
-    osc.type = 'triangle';
-    osc.frequency.value = freq;
-    osc2.type = 'sine';
-    osc2.frequency.value = freq * 2.001;
-    gain.gain.setValueAtTime(0, startTime);
-    gain.gain.linearRampToValueAtTime(volume, startTime + 0.02);
-    gain.gain.exponentialRampToValueAtTime(0.001, startTime + duration);
-    gain2.gain.setValueAtTime(0, startTime);
-    gain2.gain.linearRampToValueAtTime(volume * 0.15, startTime + 0.02);
-    gain2.gain.exponentialRampToValueAtTime(0.001, startTime + duration * 0.6);
+    osc.type='triangle'; osc.frequency.value=freq;
+    osc2.type='sine'; osc2.frequency.value=freq*2.001;
+    gain.gain.setValueAtTime(0,startTime);
+    gain.gain.linearRampToValueAtTime(volume,startTime+0.02);
+    gain.gain.exponentialRampToValueAtTime(0.001,startTime+duration);
+    gain2.gain.setValueAtTime(0,startTime);
+    gain2.gain.linearRampToValueAtTime(volume*0.15,startTime+0.02);
+    gain2.gain.exponentialRampToValueAtTime(0.001,startTime+duration*0.6);
     osc.connect(gain); gain.connect(audioCtx.destination);
     osc2.connect(gain2); gain2.connect(audioCtx.destination);
-    osc.start(startTime); osc.stop(startTime + duration);
-    osc2.start(startTime); osc2.stop(startTime + duration * 0.6);
+    osc.start(startTime); osc.stop(startTime+duration);
+    osc2.start(startTime); osc2.stop(startTime+duration*0.6);
   }
 
-  function playMelody() {
+  // Jingle apertura (Do maggiore, una sola volta)
+  function playOpeningJingle() {
+    const now = audioCtx.currentTime+0.05;
+    [
+      [261.63,0.0,0.5],[329.63,0.15,0.5],[392.00,0.30,0.5],[523.25,0.45,0.7],
+      [523.25,0.9,0.35],[493.88,1.2,0.25],[440.00,1.45,0.35],[392.00,1.75,0.5],
+      [440.00,2.2,0.3],[493.88,2.5,0.3],[523.25,2.8,0.6],
+      [261.63,3.4,1.2],[329.63,3.4,1.2],[392.00,3.4,1.2],[523.25,3.4,1.2],
+    ].forEach(([f,d,dur]) => playPianoNote(f,now+d,dur));
+  }
+
+  // Musica di sfondo — Am-F-C-G, diversa dal jingle, in loop
+  function scheduleBgNote(freq, startTime, duration, vol, type='sine') {
+    const osc = audioCtx.createOscillator();
+    const gain = audioCtx.createGain();
+    osc.type=type; osc.frequency.value=freq;
+    gain.gain.setValueAtTime(0,startTime);
+    gain.gain.linearRampToValueAtTime(vol,startTime+0.04);
+    gain.gain.setValueAtTime(vol,startTime+duration-0.08);
+    gain.gain.linearRampToValueAtTime(0,startTime+duration);
+    osc.connect(gain); gain.connect(audioCtx.destination);
+    osc.start(startTime); osc.stop(startTime+duration);
+  }
+
+  let bgLoopTimer = null;
+  function playBgLoop(startAt) {
     if (!audioCtx) return;
-    const now = audioCtx.currentTime + 0.05;
-    const notes = [
-      [261.63, 0.0,  0.5],
-      [329.63, 0.15, 0.5],
-      [392.00, 0.30, 0.5],
-      [523.25, 0.45, 0.7],
-      [523.25, 0.9,  0.35],
-      [493.88, 1.2,  0.25],
-      [440.00, 1.45, 0.35],
-      [392.00, 1.75, 0.5],
-      [440.00, 2.2,  0.3],
-      [493.88, 2.5,  0.3],
-      [523.25, 2.8,  0.6],
-      [261.63, 3.4,  1.2],
-      [329.63, 3.4,  1.2],
-      [392.00, 3.4,  1.2],
-      [523.25, 3.4,  1.2],
-    ];
-    notes.forEach(([freq, delay, dur]) => {
-      playNote(freq, now + delay, dur);
+    const t = startAt;
+    const q = 0.9; // quarti di battuta lenti
+
+    // Basso (sine grave)
+    [[220.00,0],[174.61,4],[261.63,8],[196.00,12]].forEach(([f,b]) => {
+      for(let i=0;i<4;i++) scheduleBgNote(f, t+(b+i)*q, q*0.8, 0.04,'sine');
     });
+
+    // Melodia (triangle)
+    [
+      [880.00,0,    q*1.6,0.06],[659.25,q*1.8,q*1.2,0.05],[523.25,q*3.2,q*0.8,0.04],
+      [698.46,q*4,  q*1.6,0.06],[523.25,q*5.8,q*1.0,0.05],[440.00,q*7.0,q*0.9,0.04],
+      [659.25,q*8,  q*1.6,0.06],[523.25,q*9.8,q*1.0,0.05],[392.00,q*11.0,q*0.8,0.04],
+      [587.33,q*12, q*1.8,0.06],[493.88,q*14.0,q*1.0,0.05],[392.00,q*15.2,q*0.8,0.04],
+    ].forEach(([f,b,dur,vol]) => scheduleBgNote(f,t+b,dur,vol,'triangle'));
+
+    // Arpeggi (sine, leggerissimi)
+    [
+      [440.00,0.3*q,q*0.3,0.025],[523.25,0.6*q,q*0.3,0.025],[659.25,0.9*q,q*0.3,0.025],
+      [349.23,4.3*q,q*0.3,0.025],[523.25,4.6*q,q*0.3,0.025],[698.46,4.9*q,q*0.3,0.025],
+      [261.63,8.3*q,q*0.3,0.025],[523.25,8.6*q,q*0.3,0.025],[659.25,8.9*q,q*0.3,0.025],
+      [196.00,12.3*q,q*0.3,0.025],[392.00,12.6*q,q*0.3,0.025],[493.88,12.9*q,q*0.3,0.025],
+    ].forEach(([f,b,dur,vol]) => scheduleBgNote(f,t+b,dur,vol,'sine'));
+
+    bgLoopTimer = setTimeout(() => playBgLoop(audioCtx.currentTime+0.05), 16*q*1000-150);
   }
 
-  // Envelope interaction
-  const scene = document.getElementById('scene');
-  const cardPage = document.getElementById('card-page');
-  let clicked = false;
+  // ---- PIANO INTERATTIVO ----
+  const pianoEl = document.getElementById('piano');
+  const whiteFreqs = [
+    261.63,293.66,329.63,349.23,392.00,440.00,493.88,
+    523.25,587.33,659.25,698.46,783.99,880.00,987.77
+  ];
+  const blackKeyDefs = [
+    {pos:0,freq:277.18},{pos:1,freq:311.13},{pos:3,freq:369.99},
+    {pos:4,freq:415.30},{pos:5,freq:466.16},
+    {pos:7,freq:554.37},{pos:8,freq:622.25},{pos:10,freq:739.99},
+    {pos:11,freq:830.61},{pos:12,freq:932.33}
+  ];
 
-  scene.addEventListener('click', () => {
-    if (clicked) return;
-    clicked = true;
+  let isPointerDown=false, lastKeyEl=null;
 
+  function triggerKey(freq,el) {
+    if(!audioCtx) initAudio();
+    playPianoNote(freq,audioCtx.currentTime,0.5,0.22);
+    el.classList.add('pressed');
+    setTimeout(()=>el.classList.remove('pressed'),180);
+  }
+  function handleKeyEnter(freq,el) {
+    if(!isPointerDown||el===lastKeyEl) return;
+    lastKeyEl=el; triggerKey(freq,el);
+  }
+
+  whiteFreqs.forEach(freq => {
+    const w=document.createElement('div'); w.className='wkey';
+    w.addEventListener('pointerdown',e=>{isPointerDown=true;lastKeyEl=w;triggerKey(freq,w);});
+    w.addEventListener('pointerenter',()=>handleKeyEnter(freq,w));
+    pianoEl.appendChild(w);
+  });
+  blackKeyDefs.forEach(({pos,freq})=>{
+    const b=document.createElement('div'); b.className='bkey';
+    b.style.left=(pos*25+15)+'px';
+    b.addEventListener('pointerdown',e=>{e.stopPropagation();isPointerDown=true;lastKeyEl=b;triggerKey(freq,b);});
+    b.addEventListener('pointerenter',()=>handleKeyEnter(freq,b));
+    pianoEl.appendChild(b);
+  });
+  window.addEventListener('pointerup',()=>{isPointerDown=false;lastKeyEl=null;});
+  window.addEventListener('pointercancel',()=>{isPointerDown=false;lastKeyEl=null;});
+  pianoEl.addEventListener('touchstart',e=>e.preventDefault(),{passive:false});
+  pianoEl.addEventListener('touchmove',e=>e.preventDefault(),{passive:false});
+
+  // ---- FIRME ----
+  const firme = [
+    'Alessandro','Annamarika','Colombara','Gaia','Federico G.',
+    'Davide','Tommaso','Alberto','Nico','Valentina',
+    'Massimo','Christian','Dani','Francesco','Gio'
+  ];
+  const previewEl=document.getElementById('sign-preview');
+  firme.slice(0,4).forEach(nome=>{
+    const s=document.createElement('span'); s.className='sign-preview-name';
+    s.textContent=nome; previewEl.appendChild(s);
+  });
+  const namesEl=document.getElementById('sign-names');
+  firme.forEach((nome,i)=>{
+    const span=document.createElement('span'); span.className='sign-name';
+    span.textContent=nome;
+    span.style.animationDelay=(i*0.05)+'s';
+    namesEl.appendChild(span);
+  });
+  document.getElementById('sign-toggle').addEventListener('click',()=>{
+    const area=document.getElementById('sign-area');
+    const isOpen=area.classList.toggle('open');
+    document.getElementById('sign-toggle').setAttribute('aria-expanded',isOpen);
+  });
+
+  // ---- ENVELOPE ----
+  const scene=document.getElementById('scene');
+  const cardPage=document.getElementById('card-page');
+  let clicked=false;
+
+  scene.addEventListener('click',()=>{
+    if(clicked) return; clicked=true;
     initAudio();
-    playMelody();
-
+    playOpeningJingle();
     scene.classList.add('opening');
-
-    setTimeout(() => {
+    setTimeout(()=>{
       scene.classList.add('done');
       cardPage.classList.add('visible');
       spawnConfetti();
-    }, 1200);
+    },1200);
   });
 
   function spawnConfetti() {
-    const colors = ['#534AB7','#AFA9EC','#C9A84C','#EEEDFE','#3C3489','#F7F3EC'];
-    for (let i = 0; i < 60; i++) {
-      setTimeout(() => {
-        const el = document.createElement('div');
-        el.className = 'confetti-piece';
-        el.style.left = Math.random() * 100 + 'vw';
-        el.style.background = colors[Math.floor(Math.random() * colors.length)];
-        el.style.width = (6 + Math.random() * 6) + 'px';
-        el.style.height = (6 + Math.random() * 6) + 'px';
-        el.style.animationDuration = (1.5 + Math.random() * 2) + 's';
-        el.style.animationDelay = '0s';
+    const colors=['#534AB7','#AFA9EC','#C9A84C','#EEEDFE','#3C3489','#F7F3EC'];
+    for(let i=0;i<60;i++) {
+      setTimeout(()=>{
+        const el=document.createElement('div'); el.className='confetti-piece';
+        el.style.left=Math.random()*100+'vw';
+        el.style.background=colors[Math.floor(Math.random()*colors.length)];
+        el.style.width=(6+Math.random()*6)+'px';
+        el.style.height=(6+Math.random()*6)+'px';
+        el.style.animationDuration=(1.5+Math.random()*2)+'s';
         document.body.appendChild(el);
-        setTimeout(() => el.remove(), 3500);
-      }, i * 30);
+        setTimeout(()=>el.remove(),3500);
+      },i*30);
     }
   }
 
-  // ---- ANIMATED BACKGROUND ----
-  const canvas = document.getElementById('bg-canvas');
-  const ctx = canvas.getContext('2d');
+  // ---- SFONDO ANIMATO ----
+  const canvas=document.getElementById('bg-canvas');
+  const ctx=canvas.getContext('2d');
+  function resize(){canvas.width=window.innerWidth;canvas.height=window.innerHeight;}
+  resize(); window.addEventListener('resize',resize);
 
-  function resize() {
-    canvas.width = window.innerWidth;
-    canvas.height = window.innerHeight;
-  }
-  resize();
-  window.addEventListener('resize', resize);
-
-  // Floating particles
-  const PARTICLE_COUNT = 55;
-  const particles = Array.from({ length: PARTICLE_COUNT }, () => ({
-    x: Math.random() * window.innerWidth,
-    y: Math.random() * window.innerHeight,
-    r: 1 + Math.random() * 2.5,
-    speedX: (Math.random() - 0.5) * 0.3,
-    speedY: -0.1 - Math.random() * 0.3,
-    opacity: 0.04 + Math.random() * 0.18,
-    pulse: Math.random() * Math.PI * 2,
-    pulseSpeed: 0.005 + Math.random() * 0.015,
+  const particles=Array.from({length:55},()=>({
+    x:Math.random()*window.innerWidth, y:Math.random()*window.innerHeight,
+    r:1+Math.random()*2.5,
+    speedX:(Math.random()-0.5)*0.3, speedY:-0.1-Math.random()*0.3,
+    opacity:0.04+Math.random()*0.18,
+    pulse:Math.random()*Math.PI*2, pulseSpeed:0.005+Math.random()*0.015,
   }));
-
-  // Wave lines (like staff lines, very subtle)
-  const WAVE_COUNT = 6;
-  const waves = Array.from({ length: WAVE_COUNT }, (_, i) => ({
-    y: (window.innerHeight / (WAVE_COUNT + 1)) * (i + 1),
-    amplitude: 8 + Math.random() * 18,
-    frequency: 0.003 + Math.random() * 0.004,
-    speed: 0.003 + Math.random() * 0.004,
-    phase: Math.random() * Math.PI * 2,
-    opacity: 0.04 + Math.random() * 0.06,
+  const waves=Array.from({length:6},(_,i)=>({
+    y:(window.innerHeight/7)*(i+1),
+    amplitude:8+Math.random()*18, frequency:0.003+Math.random()*0.004,
+    speed:0.003+Math.random()*0.004, phase:Math.random()*Math.PI*2,
+    opacity:0.04+Math.random()*0.06,
   }));
-
-  // Nebula blobs (slow drifting color clouds)
-  const blobs = [
-    { x: 0.15, y: 0.25, r: 0.28, color: '83,74,183', speed: 0.00007, angle: 0.4 },
-    { x: 0.80, y: 0.70, r: 0.22, color: '60,52,137', speed: 0.00009, angle: 2.1 },
-    { x: 0.50, y: 0.10, r: 0.18, color: '175,169,236', speed: 0.00006, angle: 5.0 },
-    { x: 0.30, y: 0.85, r: 0.20, color: '83,74,183', speed: 0.00008, angle: 3.3 },
+  const blobs=[
+    {x:0.15,y:0.25,r:0.28,color:'83,74,183',speed:0.00007,angle:0.4},
+    {x:0.80,y:0.70,r:0.22,color:'60,52,137',speed:0.00009,angle:2.1},
+    {x:0.50,y:0.10,r:0.18,color:'175,169,236',speed:0.00006,angle:5.0},
+    {x:0.30,y:0.85,r:0.20,color:'83,74,183',speed:0.00008,angle:3.3},
   ];
 
-  let t = 0;
-
-  function drawFrame() {
-    const W = canvas.width;
-    const H = canvas.height;
-    ctx.clearRect(0, 0, W, H);
-
-    // base bg
-    ctx.fillStyle = '#FFFFFF';
-    ctx.fillRect(0, 0, W, H);
-
-    // nebula blobs
-    blobs.forEach(b => {
-      b.angle += b.speed * 60;
-      const bx = (b.x + Math.cos(b.angle) * 0.06) * W;
-      const by = (b.y + Math.sin(b.angle) * 0.06) * H;
-      const br = b.r * Math.min(W, H);
-      const grad = ctx.createRadialGradient(bx, by, 0, bx, by, br);
-      grad.addColorStop(0, `rgba(${b.color},0.10)`);
-      grad.addColorStop(1, `rgba(${b.color},0)`);
-      ctx.beginPath();
-      ctx.arc(bx, by, br, 0, Math.PI * 2);
-      ctx.fillStyle = grad;
-      ctx.fill();
+  function drawFrame(){
+    const W=canvas.width,H=canvas.height;
+    ctx.clearRect(0,0,W,H);
+    ctx.fillStyle='#FFFFFF'; ctx.fillRect(0,0,W,H);
+    blobs.forEach(b=>{
+      b.angle+=b.speed*60;
+      const bx=(b.x+Math.cos(b.angle)*0.06)*W, by=(b.y+Math.sin(b.angle)*0.06)*H;
+      const br=b.r*Math.min(W,H);
+      const grad=ctx.createRadialGradient(bx,by,0,bx,by,br);
+      grad.addColorStop(0,`rgba(${b.color},0.10)`); grad.addColorStop(1,`rgba(${b.color},0)`);
+      ctx.beginPath(); ctx.arc(bx,by,br,0,Math.PI*2); ctx.fillStyle=grad; ctx.fill();
     });
-
-    // wave lines (music staff mood)
-    waves.forEach(w => {
-      w.phase += w.speed;
-      ctx.beginPath();
-      for (let x = 0; x <= W; x += 3) {
-        const y = w.y + Math.sin(x * w.frequency + w.phase) * w.amplitude;
-        x === 0 ? ctx.moveTo(x, y) : ctx.lineTo(x, y);
+    waves.forEach(w=>{
+      w.phase+=w.speed; ctx.beginPath();
+      for(let x=0;x<=W;x+=3){
+        const y=w.y+Math.sin(x*w.frequency+w.phase)*w.amplitude;
+        x===0?ctx.moveTo(x,y):ctx.lineTo(x,y);
       }
-      ctx.strokeStyle = `rgba(83,74,183,${w.opacity})`;
-      ctx.lineWidth = 0.8;
-      ctx.stroke();
+      ctx.strokeStyle=`rgba(83,74,183,${w.opacity})`; ctx.lineWidth=0.8; ctx.stroke();
     });
-
-    // floating particles
-    particles.forEach(p => {
-      p.x += p.speedX;
-      p.y += p.speedY;
-      p.pulse += p.pulseSpeed;
-      if (p.y < -10) { p.y = canvas.height + 10; p.x = Math.random() * canvas.width; }
-      if (p.x < -10) p.x = canvas.width + 10;
-      if (p.x > canvas.width + 10) p.x = -10;
-
-      const alpha = p.opacity * (0.7 + 0.3 * Math.sin(p.pulse));
-      ctx.beginPath();
-      ctx.arc(p.x, p.y, p.r, 0, Math.PI * 2);
-      ctx.fillStyle = `rgba(83,74,183,${alpha})`;
-      ctx.fill();
+    particles.forEach(p=>{
+      p.x+=p.speedX; p.y+=p.speedY; p.pulse+=p.pulseSpeed;
+      if(p.y<-10){p.y=canvas.height+10;p.x=Math.random()*canvas.width;}
+      if(p.x<-10)p.x=canvas.width+10; if(p.x>canvas.width+10)p.x=-10;
+      const alpha=p.opacity*(0.7+0.3*Math.sin(p.pulse));
+      ctx.beginPath(); ctx.arc(p.x,p.y,p.r,0,Math.PI*2);
+      ctx.fillStyle=`rgba(83,74,183,${alpha})`; ctx.fill();
     });
-
-    t++;
     requestAnimationFrame(drawFrame);
   }
-
   drawFrame();
 </script>
 </body>
