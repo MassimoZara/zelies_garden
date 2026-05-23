@@ -90,8 +90,8 @@
 
     #garden-grid {
       display: grid;
-      grid-template-columns: repeat(4, 1fr);
-      gap: 12px;
+      grid-template-columns: repeat(3, 1fr);
+      gap: 20px;
     }
 
     /* ── Single pot ───────────────────────────────────────── */
@@ -99,13 +99,13 @@
       background: linear-gradient(160deg, #3a2410 50%, #2e1a09 100%);
       border: 2px solid #6a3e18;
       border-radius: 4px;
-      padding: 12px;
+      padding: 16px;
       cursor: pointer;
       display: flex;
       flex-direction: column;
       align-items: center;
-      gap: 8px;
-      min-height: 190px;
+      gap: 10px;
+      min-height: 300px;
       transition: border-color 0.15s, box-shadow 0.15s;
       position: relative;
       box-shadow: 0 3px 10px rgba(0,0,0,0.4),
@@ -119,8 +119,8 @@
 
     .pot canvas {
       image-rendering: pixelated;
-      width: 96px;
-      height: 96px;
+      width: 192px;
+      height: 192px;
     }
 
     .pot .plant-name {
@@ -309,13 +309,54 @@
     }
 
     .debug-btn:hover { background: #444; color: #fff; }
+
+    /* ── Tools ────────────────────────────────────────────────── */
+    .tool-item {
+      display: flex;
+      align-items: center;
+      font-size: 0.8rem;
+      cursor: pointer;
+      padding: 6px 8px;
+      border-radius: 2px;
+      transition: background 0.1s;
+    }
+
+    .tool-item:hover { background: var(--border); }
+
+    .tool-item.selected {
+      background: #0e2d45;
+      border: 1px solid #5bc4e3;
+      color: #a8dff7;
+    }
+
+    .pot.watered {
+      border-color: #4aaed0;
+      box-shadow: 0 3px 10px rgba(0,0,0,0.4), 0 0 8px rgba(40,152,208,0.3),
+                  inset 0 1px 0 rgba(255,180,80,0.06);
+    }
+
+    .pot.fertilized {
+      border-color: #5cd85c;
+      box-shadow: 0 3px 10px rgba(0,0,0,0.4), 0 0 10px rgba(92,216,92,0.35),
+                  inset 0 1px 0 rgba(255,180,80,0.06);
+    }
+
+    .fertilizer-mode .pot:hover {
+      border-color: #5cd85c;
+      box-shadow: 0 4px 16px rgba(0,0,0,0.5), 0 0 10px rgba(92,216,92,0.3);
+    }
+
+    .water-mode .pot:hover {
+      border-color: #5bc4e3;
+      box-shadow: 0 4px 16px rgba(0,0,0,0.5), 0 0 10px rgba(91,196,227,0.28);
+    }
   </style>
 </head>
 <body>
 
   <!-- ── Header / HUD ──────────────────────────────────────── -->
   <header>
-    <h1>🌱 Zelie's Garden</h1>
+    <h1>🌱 Zélie's Garden</h1>
     <div id="hud">
       <div><span>Coins </span><strong id="hud-coins">0</strong></div>
       <div><span>Day </span><strong id="hud-day">1</strong></div>
@@ -336,6 +377,13 @@
 
     <!-- Sidebar -->
     <aside id="sidebar">
+
+      <div class="panel">
+        <h3>Strumenti</h3>
+        <div id="tool-list">
+          <!-- Tool items injected by JS -->
+        </div>
+      </div>
 
       <div class="panel">
         <h3>Seeds</h3>
@@ -360,7 +408,7 @@
 
       <div class="panel" id="debug-panel">
         <h3>Debug</h3>
-        <button class="debug-btn" onclick="dbgGrowAll()">⚡ Grow all plants +1 day</button>
+        <button class="debug-btn" onclick="dbgGrowAll()">⏭ Avanza 1 giorno</button>
         <button class="debug-btn" onclick="dbgReadyAll()">🌟 Make all plants ready</button>
         <button class="debug-btn" onclick="dbgAddCoins()">💰 Add 50 coins</button>
         <button class="debug-btn" onclick="dbgReset()">🗑 Reset save</button>
