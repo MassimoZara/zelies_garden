@@ -121,6 +121,22 @@
       image-rendering: pixelated;
       width: 192px;
       height: 192px;
+      transform-origin: bottom center;
+      animation: sway 3.2s ease-in-out infinite;
+    }
+
+    .pot:nth-child(2) canvas { animation-delay: -1.1s; }
+    .pot:nth-child(3) canvas { animation-delay: -2.0s; }
+    .pot:nth-child(4) canvas { animation-delay: -0.6s; }
+    .pot:nth-child(5) canvas { animation-delay: -1.8s; }
+    .pot:nth-child(6) canvas { animation-delay: -2.5s; }
+    .pot:nth-child(7) canvas { animation-delay: -0.4s; }
+    .pot:nth-child(8) canvas { animation-delay: -1.5s; }
+    .pot:nth-child(9) canvas { animation-delay: -2.8s; }
+
+    @keyframes sway {
+      0%, 100% { transform: rotate(-0.7deg) translateX(-1px); }
+      50%       { transform: rotate(0.7deg)  translateX(1px);  }
     }
 
     .pot .plant-name {
@@ -379,7 +395,7 @@
     <aside id="sidebar">
 
       <div class="panel">
-        <h3>Strumenti</h3>
+        <h3>Tools</h3>
         <div id="tool-list">
           <!-- Tool items injected by JS -->
         </div>
@@ -406,14 +422,14 @@
         </div>
       </div>
 
-     <!-- <div class="panel" id="debug-panel">
+     <div class="panel" id="debug-panel">
         <h3>Debug</h3>
         <button class="debug-btn" onclick="dbgGrowAll()">⏭ Avanza 1 giorno</button>
         <button class="debug-btn" onclick="dbgReadyAll()">🌟 Make all plants ready</button>
         <button class="debug-btn" onclick="dbgAddCoins()">💰 Add 50 coins</button>
         <button class="debug-btn" onclick="dbgReset()">🗑 Reset save</button>
       </div>
--->
+
     </aside>
   </main>
 

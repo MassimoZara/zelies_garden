@@ -23,7 +23,7 @@ const SHOP = [
   { type:'seed', key:'tomato',    label:'Tomato seeds',    price:7  },
   { type:'seed', key:'pumpkin',   label:'Pumpkin seeds',   price:12 },
   { type:'pot',        key:'pot',        label:'Extra pot',       price:30 },
-  { type:'fertilizer', key:'fertilizer', label:'Fertilizzante',   price:15 },
+  { type:'fertilizer', key:'fertilizer', label:'Fertilizer',      price:15 },
   { type:'seed', key:'love',      label:'Love seeds',      price:100 },
 ];
 
@@ -65,10 +65,11 @@ function loadGame() {
     const plant = pot.plant;
     if (!plant) return;
 
-    // Overnight growth: if watered yesterday and not yet grown today, grow
-    if (plant.lastWatered === yesterday && plant.lastGrownDate !== today && plant.growth < 1) {
-      const mult = plant.fertilized ? 2 : 1;
-      plant.growth = Math.min(1, plant.growth + mult / PLANTS[plant.type].days);
+    // Overnight growth: always grows, but watering gives full speed; unwatered gives half speed
+    if (plant.lastGrownDate !== today && plant.growth < 1) {
+      const watered = plant.lastWatered === yesterday;
+      const rate = (watered ? 1 : 0.5) * (plant.fertilized ? 2 : 1);
+      plant.growth = Math.min(1, plant.growth + rate / PLANTS[plant.type].days);
       plant.lastGrownDate = today;
       plant.fertilized = false;
     }
@@ -752,7 +753,7 @@ function renderToolList() {
 
   const waterBtn = document.createElement('div');
   waterBtn.className = 'tool-item' + (G.activeTool === 'water' ? ' selected' : '');
-  waterBtn.innerHTML = '<span>🪣 Annaffiatoio</span>';
+  waterBtn.innerHTML = '<span>🪣 Watering Can</span>';
   waterBtn.addEventListener('click', () => selectTool('water'));
   list.appendChild(waterBtn);
 
@@ -760,7 +761,7 @@ function renderToolList() {
   const fertBtn = document.createElement('div');
   fertBtn.className = 'tool-item' + (G.activeTool === 'fertilizer' ? ' selected' : '');
   if (fertCount === 0) fertBtn.style.opacity = '0.4';
-  fertBtn.innerHTML = `<span>🌿 Fertilizzante</span><span class="seed-qty">×${fertCount}</span>`;
+  fertBtn.innerHTML = `<span>🌿 Fertilizer</span><span class="seed-qty">×${fertCount}</span>`;
   fertBtn.addEventListener('click', () => { if (fertCount > 0) selectTool('fertilizer'); });
   list.appendChild(fertBtn);
 }
@@ -798,37 +799,37 @@ function clickPot(id) {
   // ── Fertilizer tool mode ───────────────────────────────────
   if (G.activeTool === 'fertilizer') {
     if (!pot.plant || pot.plant.growth >= 1) {
-      addLog('Nessuna pianta da fertilizzare qui.');
+      addLog('No plant to fertilize here.');
       return;
     }
     if (pot.plant.fertilized) {
-      addLog(`${PLANTS[pot.plant.type].name} è già fertilizzata!`);
+      addLog(`${PLANTS[pot.plant.type].name} is already fertilized!`);
       return;
     }
     pot.plant.fertilized = true;
     G.inv.fertilizer--;
     saveGame();
     renderAll();
-    addLog(`🌿 <span>${PLANTS[pot.plant.type].name}</span> fertilizzata — crescerà il doppio stanotte!`);
+    addLog(`🌿 <span>${PLANTS[pot.plant.type].name}</span> fertilized — will grow twice tonight!`);
     return;
   }
 
   // ── Watering can tool mode ──────────────────────────────────
   if (G.activeTool === 'water') {
     if (!pot.plant) {
-      addLog('Vaso vuoto — nessuna pianta da innaffiare.');
+      addLog('Empty pot — no plant to water.');
       return;
     }
     if (pot.plant.growth >= 1) {
       const p = PLANTS[pot.plant.type];
-      showModal(`Raccogli ${p.emoji} ${p.name}`, `${p.name} è pronta!\nRaccogli per ${p.reward} monete?`, [
-        { label: 'Raccogli!', primary: true,  action: () => { doHarvest(pot); closeModal(); } },
-        { label: 'Ancora no', primary: false, action: closeModal },
+      showModal(`Harvest ${p.emoji} ${p.name}`, `Your ${p.name} is ready!\nHarvest for ${p.reward} coins?`, [
+        { label: 'Harvest!',  primary: true,  action: () => { doHarvest(pot); closeModal(); } },
+        { label: 'Not yet',   primary: false, action: closeModal },
       ]);
       return;
     }
     if (pot.plant.lastWatered === todayStr()) {
-      addLog(`${PLANTS[pot.plant.type].name} è già stata innaffiata oggi! ✓`);
+      addLog(`${PLANTS[pot.plant.type].name} already watered today! ✓`);
       return;
     }
     animateWater(pot, () => doWater(pot));
@@ -873,7 +874,7 @@ function clickPot(id) {
   }
 
   // No tool selected — hint to use watering can
-  addLog('🪣 Seleziona l\'annaffiatoio per innaffiare!');
+  addLog('🪣 Select the watering can to water plants!');
 }
 
 function doPlant(pot, seedKey) {
@@ -886,7 +887,7 @@ function doPlant(pot, seedKey) {
     growth: 0,
     sad: false,
   };
-  addLog(`Piantato <span>${p.emoji} ${p.name}</span> nel vaso ${pot.id + 1} — innaffialo per farlo crescere!`);
+  addLog(`Planted <span>${p.emoji} ${p.name}</span> in pot ${pot.id + 1} — water it to help it grow!`);
   saveGame();
   renderAll();
 }
@@ -895,7 +896,7 @@ function doWater(pot) {
   const p = PLANTS[pot.plant.type];
   pot.plant.lastWatered = todayStr();
   pot.plant.sad = false;
-  addLog(`Innaffiato <span>${p.emoji} ${p.name}</span> 💧 — crescerà stanotte!`);
+  addLog(`Watered <span>${p.emoji} ${p.name}</span> 💧 — will grow faster tonight!`);
   saveGame();
   renderAll();
 }
@@ -914,15 +915,15 @@ function buy(item) {
   G.coins -= item.price;
   if (item.type === 'seed') {
     G.inv[item.key] = (G.inv[item.key] || 0) + 1;
-    addLog(`Comprato <span>seme di ${PLANTS[item.key].name}</span> per ${item.price}g`);
+    addLog(`Bought <span>${PLANTS[item.key].name} seed</span> for ${item.price}g`);
   } else if (item.type === 'pot') {
     G.pots.push({ id: G.pots.length, plant: null });
     buildGrid();
     G.pots.forEach(p => updatePotEl(p));
-    addLog(`Aggiunto un <span>nuovo vaso</span> al giardino!`);
+    addLog(`Added a <span>new pot</span> to the garden!`);
   } else if (item.type === 'fertilizer') {
     G.inv.fertilizer = (G.inv.fertilizer || 0) + 1;
-    addLog(`Comprato <span>fertilizzante</span> per ${item.price}g`);
+    addLog(`Bought <span>fertilizer</span> for ${item.price}g`);
   }
   saveGame();
   renderAll();
@@ -959,10 +960,11 @@ function dbgGrowAll() {
   G.pots.forEach(pot => {
     const plant = pot.plant;
     if (!plant) return;
-    // Apply overnight growth for plants watered today
-    if (plant.lastWatered === today && plant.growth < 1) {
-      const mult = plant.fertilized ? 2 : 1;
-      plant.growth = Math.min(1, plant.growth + mult / PLANTS[plant.type].days);
+    // Apply overnight growth (watered = full speed, unwatered = half speed)
+    if (plant.growth < 1) {
+      const watered = plant.lastWatered === today;
+      const rate = (watered ? 1 : 0.5) * (plant.fertilized ? 2 : 1);
+      plant.growth = Math.min(1, plant.growth + rate / PLANTS[plant.type].days);
       plant.lastGrownDate = today;
       plant.fertilized = false;
     }
@@ -970,7 +972,7 @@ function dbgGrowAll() {
     if (plant.lastWatered) plant.lastWatered = yesterday;
     plant.sad = false;
   });
-  addLog('[debug] Giorno avanzato — innaffia le piante!');
+  addLog('[debug] Day advanced — water your plants!');
   saveGame();
   renderAll();
 }
@@ -1005,4 +1007,69 @@ loadGame();
 initPots(4);
 buildGrid();
 renderAll();
+
+// ── Petal particles ──────────────────────────────────────────────
+(function () {
+  const PETAL_COLORS = [
+    '#ff2d78','#e94560','#f5c542','#c86dd7',
+    '#ff8c00','#ff4444','#5cb85c','#ffd0e8',
+    '#a0f0a0','#60c0f0',
+  ];
+  const MAX_PETALS = 28;
+  const canvas = document.createElement('canvas');
+  canvas.style.cssText = 'position:fixed;inset:0;width:100%;height:100%;pointer-events:none;z-index:0;';
+  document.body.prepend(canvas);
+  const ctx = canvas.getContext('2d');
+
+  let W, H, petals = [];
+
+  function resize() {
+    W = canvas.width  = window.innerWidth;
+    H = canvas.height = window.innerHeight;
+  }
+
+  function spawnPetal() {
+    const size = (Math.random() < 0.5 ? 3 : 4);
+    return {
+      x:    Math.random() * W,
+      y:    -size - Math.random() * H * 0.3,
+      vy:   0.35 + Math.random() * 0.5,
+      vx:   (Math.random() - 0.5) * 0.4,
+      wobble: Math.random() * Math.PI * 2,
+      wobbleSpeed: 0.018 + Math.random() * 0.022,
+      size,
+      col: PETAL_COLORS[Math.floor(Math.random() * PETAL_COLORS.length)],
+      alpha: 0.55 + Math.random() * 0.35,
+    };
+  }
+
+  function tick() {
+    ctx.clearRect(0, 0, W, H);
+
+    while (petals.length < MAX_PETALS) petals.push(spawnPetal());
+
+    for (let i = petals.length - 1; i >= 0; i--) {
+      const p = petals[i];
+      p.wobble += p.wobbleSpeed;
+      p.x += p.vx + Math.sin(p.wobble) * 0.6;
+      p.y += p.vy;
+
+      if (p.y > H + p.size) {
+        petals.splice(i, 1);
+        continue;
+      }
+
+      ctx.globalAlpha = p.alpha;
+      ctx.fillStyle = p.col;
+      ctx.fillRect(Math.round(p.x), Math.round(p.y), p.size, p.size);
+    }
+
+    ctx.globalAlpha = 1;
+    requestAnimationFrame(tick);
+  }
+
+  resize();
+  window.addEventListener('resize', resize);
+  tick();
+})();
 addLog('Welcome to <span>Zelie\'s Garden</span>! 🌱');
