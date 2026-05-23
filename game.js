@@ -473,17 +473,19 @@ function renderPot(pot) {
   ctx.fillStyle = '#1a1a2e';
   ctx.fillRect(0, 0, W, H);
 
-  // Sky → horizon → grass bands
-  rect(ctx, 0, 0,  W, 10, '#4a7898');
-  rect(ctx, 0, 10, W, 7,  '#3a6870');
-  rect(ctx, 0, 17, W, 11, '#386428');
-  // Subtle cloud dots in sky
-  px(ctx, 5,  3, '#7aaec8'); px(ctx, 6,  3, '#7aaec8'); px(ctx, 7,  2, '#7aaec8');
-  px(ctx, 34, 5, '#7aaec8'); px(ctx, 35, 5, '#7aaec8'); px(ctx, 36, 4, '#7aaec8');
-  // Tiny grass blades at horizon
-  for (let gx = 0; gx < W; gx += 3) {
-    px(ctx, gx,   16, '#4aaa38');
-    px(ctx, gx+1, 15, '#3a8a28');
+  // Sky
+  rect(ctx, 0, 0,  W, 12, '#7ec8e3');
+  rect(ctx, 0, 12, W, 6,  '#b0dff0');
+  // Clouds
+  rect(ctx, 3,  2, 7, 2, '#e8f8ff'); px(ctx, 4,  1, '#e8f8ff'); px(ctx, 8,  1, '#e8f8ff');
+  rect(ctx, 30, 4, 6, 2, '#e8f8ff'); px(ctx, 31, 3, '#e8f8ff'); px(ctx, 34, 3, '#e8f8ff');
+  // Grass strip
+  rect(ctx, 0, 18, W, 10, '#5ab830');
+  rect(ctx, 0, 18, W, 2,  '#78d848');
+  // Grass blades
+  for (let gx = 1; gx < W; gx += 3) {
+    px(ctx, gx,   17, '#78d848');
+    px(ctx, gx+1, 16, '#5ab830');
   }
 
   const plant = pot.plant;
